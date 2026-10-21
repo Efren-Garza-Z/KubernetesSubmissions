@@ -14,4 +14,7 @@ spec:
     spec:
       containers:
         - name: todo-app
-          image: edgz082002/todo-app:v1
+          image: edgz082002/todo-app:v2
+          env:
+            - name: PORT
+              value: "8080"
