@@ -55,7 +55,22 @@ func main() {
 			<body style="text-align: center; font-family: sans-serif;">
 				<h1>Todo App</h1>
 				<img src="/image.jpg" alt="Cached Image" style="max-width: 400px; height: auto; border-radius: 8px;"/>
-				<p>DevOps with Kubernetes 2026</p>
+				
+				<div style="margin-top: 20px;">
+					<form action="#" method="POST">
+						<input type="text" name="todo" maxlength="140" placeholder="Enter a new todo (max 140 characters)" style="width: 300px; padding: 5px;"/>
+						<button type="submit" style="padding: 5px 10px;">Send</button>
+					</form>
+				</div>
+
+				<div style="margin-top: 20px; text-align: left; display: inline-block; width: 400px;">
+					<h3>Todos</h3>
+					<ul>
+						<li>Learn Kubernetes basics</li>
+						<li>Deploy application to cluster</li>
+						<li>Configure persistent volumes</li>
+					</ul>
+				</div>
 			</body>
 			</html>
 		`)
