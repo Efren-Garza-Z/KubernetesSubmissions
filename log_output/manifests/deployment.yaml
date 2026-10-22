@@ -15,6 +15,9 @@ spec:
       volumes:
         - name: shared-logs
           emptyDir: {}
+        - name: persistent-storage
+          persistentVolumeClaim:
+            claimName: shared-pvc
       containers:
         - name: log-writer
           image: edgz082002/log-writer:v1
@@ -22,7 +25,9 @@ spec:
             - name: shared-logs
               mountPath: /usr/src/app/files
         - name: log-reader
-          image: edgz082002/log-reader:v2
+          image: edgz082002/log-reader:v3
           volumeMounts:
             - name: shared-logs
               mountPath: /usr/src/app/files
+            - name: persistent-storage
+              mountPath: /usr/src/app/shared

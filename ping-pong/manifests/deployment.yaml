@@ -14,4 +14,11 @@ spec:
     spec:
       containers:
         - name: ping-pong
-          image: edgz082002/ping-pong:v1
+          image: edgz082002/ping-pong:v2
+          volumeMounts:
+            - name: persistent-storage
+              mountPath: /usr/src/app/shared
+      volumes:
+        - name: persistent-storage
+          persistentVolumeClaim:
+            claimName: shared-pvc
