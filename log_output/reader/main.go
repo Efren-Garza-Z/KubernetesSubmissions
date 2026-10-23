@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -14,12 +15,18 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	pingPongs, err := os.ReadFile("/usr/src/app/shared/pingpongs.txt")
-	if err != nil {
-		pingPongs = []byte("0") // Default if ping-pong hasn't been accessed yet
+	// Make an HTTP request to the ping-pong service via Kubernetes internal DNS
+	resp, err := http.Get("http://ping-pong-svc:2345/pings")
+	pingPongs := "0"
+	if err == nil {
+		defer resp.Body.Close()
+		body, err := io.ReadAll(resp.Body)
+		if err == nil {
+			pingPongs = string(body)
+		}
 	}
 
-	fmt.Fprintf(w, "%s.\nPing / Pongs: %s", string(logData), string(pingPongs))
+	fmt.Fprintf(w, "%s.\nPing / Pongs: %s", string(logData), pingPongs)
 }
 
 func main() {
