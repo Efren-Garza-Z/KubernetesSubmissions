@@ -18,7 +18,7 @@ spec:
             claimName: todo-pvc
       containers:
         - name: todo-app
-          image: edgz082002/todo-app:v4
+          image: edgz082002/todo-app:v5
           env:
             - name: PORT
               value: "8080"
