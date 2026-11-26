@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 )
 
 var todos = []string{"Learn Kubernetes basics", "Deploy application to cluster", "Configure persistent volumes"}
@@ -19,14 +20,16 @@ func todosHandler(w http.ResponseWriter, r *http.Request) {
 		if newTodo != "" {
 			todos = append(todos, newTodo)
 		}
-		// Redirect the browser back to the main page after form submission
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	}
 }
 
 func main() {
 	http.HandleFunc("/todos", todosHandler)
-	port := "8080"
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
 	fmt.Printf("Todo Backend starting on port %s\n", port)
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }

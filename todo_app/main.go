@@ -7,15 +7,28 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 )
 
-// ... (keep downloadImage and checkAndFetchImage functions exactly the same) ...
-const imagePath = "/usr/src/app/files/image.jpg"
+func getEnv(key, fallback string) string {
+	if val := os.Getenv(key); val != "" {
+		return val
+	}
+	return fallback
+}
+
+var (
+	imagePath  = getEnv("IMAGE_PATH", "/usr/src/app/files/image.jpg")
+	imageURL   = getEnv("IMAGE_URL", "https://picsum.photos/1200")
+	backendURL = getEnv("BACKEND_URL", "http://todo-backend-svc:2345/todos")
+	ttlMinutes = getEnv("IMAGE_TTL_MINUTES", "10")
+)
 
 func downloadImage() error {
-	resp, err := http.Get("https://picsum.photos/1200")
+	resp, err := http.Get(imageURL)
 	if err != nil {
 		return err
 	}
@@ -30,27 +43,29 @@ func downloadImage() error {
 }
 
 func checkAndFetchImage() {
+	mins, err := strconv.Atoi(ttlMinutes)
+	if err != nil {
+		mins = 10
+	}
 	info, err := os.Stat(imagePath)
-	if os.IsNotExist(err) || time.Since(info.ModTime()) > 10*time.Minute {
+	if os.IsNotExist(err) || time.Since(info.ModTime()) > time.Duration(mins)*time.Minute {
 		downloadImage()
 	}
 }
 
 func main() {
-	os.MkdirAll("/usr/src/app/files", os.ModePerm)
+	os.MkdirAll(filepath.Dir(imagePath), os.ModePerm)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		checkAndFetchImage()
 
-		// Fetch todos from backend
 		var todos []string
-		resp, err := http.Get("http://todo-backend-svc:2345/todos")
+		resp, err := http.Get(backendURL)
 		if err == nil {
 			defer resp.Body.Close()
 			json.NewDecoder(resp.Body).Decode(&todos)
 		}
 
-		// Build the HTML list
 		var todosHtml strings.Builder
 		for _, todo := range todos {
 			todosHtml.WriteString(fmt.Sprintf("<li>%s</li>", todo))
@@ -66,7 +81,6 @@ func main() {
 				<img src="/image.jpg" alt="Cached Image" style="max-width: 400px; height: auto; border-radius: 8px;"/>
 				
 				<div style="margin-top: 20px;">
-					<!-- Form POSTs to /todos handled by Ingress -->
 					<form action="/todos" method="POST">
 						<input type="text" name="todo" maxlength="140" placeholder="Enter a new todo (max 140 characters)" style="width: 300px; padding: 5px;"/>
 						<button type="submit" style="padding: 5px 10px;">Send</button>
@@ -86,9 +100,6 @@ func main() {
 		http.ServeFile(w, r, imagePath)
 	})
 
-	port := os.Getenv("PORT")
-	if port == "" {
-		port = "8080"
-	}
+	port := getEnv("PORT", "8080")
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
