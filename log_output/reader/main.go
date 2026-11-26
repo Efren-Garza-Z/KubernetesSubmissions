@@ -6,6 +6,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 )
 
 func handler(w http.ResponseWriter, r *http.Request) {
@@ -15,6 +16,14 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	infoData, err := os.ReadFile("/etc/config/information.txt")
+	fileContent := ""
+	if err == nil {
+		fileContent = strings.TrimRight(string(infoData), "\r\n")
+	}
+
+	message := os.Getenv("MESSAGE")
+
 	// Make an HTTP request to the ping-pong service via Kubernetes internal DNS
 	resp, err := http.Get("http://ping-pong-svc:2345/pings")
 	pingPongs := "0"
@@ -22,11 +31,18 @@ func handler(w http.ResponseWriter, r *http.Request) {
 		defer resp.Body.Close()
 		body, err := io.ReadAll(resp.Body)
 		if err == nil {
-			pingPongs = string(body)
+			pingPongs = strings.TrimSpace(string(body))
 		}
 	}
 
-	fmt.Fprintf(w, "%s.\nPing / Pongs: %s", string(logData), pingPongs)
+	fmt.Fprintf(
+		w,
+		"file content: %s\nenv variable: MESSAGE=%s\n%s.\nPing / Pongs: %s",
+		fileContent,
+		message,
+		strings.TrimSpace(string(logData)),
+		pingPongs,
+	)
 }
 
 func main() {
